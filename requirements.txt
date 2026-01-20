@@ -9,3 +9,6 @@ python-jose
 passlib
 bcrypt
 aiofiles
+supabase
+psycopg2-binary
+python-dotenv

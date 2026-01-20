@@ -17,11 +17,14 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="SecureAttend API")
 
+# Resolve paths relative to the current file (backend/main.py)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Mount Static Files
-app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 # Templates
-templates = Jinja2Templates(directory="backend/templates")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # CORS Setup - Enable all for development
 app.add_middleware(
