@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex-grow flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-8">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">Create Account</h2>
+            <p class="text-center text-gray-500 mb-8">Join SecureAttend system</p>
+
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 transition-colors"
+                        placeholder="John Doe">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <input type="email" id="email" name="email" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 transition-colors"
+                        placeholder="john@college.edu">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" name="password" required
+                        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 transition-colors"
+                        placeholder="••••••••">
+                </div>
+
+                <!-- Face Capture Section -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Registration Photo (Reference
+                        Face)</label>
+                    <div id="cameraPreview"
+                        class="relative bg-gray-100 rounded-xl overflow-hidden aspect-video flex items-center justify-center border-2 border-dashed border-gray-300">
+                        <video id="video" class="hidden w-full h-full object-cover" autoplay playsinline></video>
+                        <canvas id="canvas" class="hidden"></canvas>
+                        <img id="capturedPhoto" class="hidden w-full h-full object-cover">
+                        <div id="placeholderText" class="text-center p-4">
+                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <p class="text-xs text-gray-500">Camera required for face recognition</p>
+                        </div>
+                    </div>
+                    <button type="button" id="startCamBtn"
+                        class="w-full py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                        Start Camera
+                    </button>
+                    <button type="button" id="captureBtn"
+                        class="hidden w-full py-2 px-4 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors">
+                        Take Photo
+                    </button>
+                </div>
+
+                <button type="submit" id="submitBtn" disabled
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    Create Account
+                </button>
+            </form>
+
+            <div id="errorMessage" class="hidden mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm text-center"></div>
+            <div id="successMessage" class="hidden mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm text-center">
+            </div>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">Already have an account? <a href="/login"
+                        class="text-primary-600 font-medium hover:text-primary-700">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let capturedBlob = null;
+    let stream = null;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const photo = document.getElementById('capturedPhoto');
+    const startCamBtn = document.getElementById('startCamBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const placeholder = document.getElementById('placeholderText');
+
+    startCamBtn.addEventListener('click', async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+            video.srcObject = stream;
+            video.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            photo.classList.add('hidden');
+            startCamBtn.classList.add('hidden');
+            captureBtn.classList.remove('hidden');
+        } catch (err) {
+            alert('Could not access camera. Please allow permissions.');
+        }
+    });
+
+    captureBtn.addEventListener('click', () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        canvas.toBlob((blob) => {
+            capturedBlob = blob;
+            photo.src = URL.createObjectURL(blob);
+            photo.classList.remove('hidden');
+            video.classList.add('hidden');
+            captureBtn.classList.add('hidden');
+            startCamBtn.textContent = 'Retake Photo';
+            startCamBtn.classList.remove('hidden');
+            submitBtn.disabled = false;
+
+            // Stop stream
+            stream.getTracks().forEach(track => track.stop());
+        }, 'image/jpeg', 0.9);
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+
+        if (!capturedBlob) {
+            errorDiv.textContent = 'Please take a photo first';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('email', document.getElementById('email').value);
+        formData.append('full_name', document.getElementById('fullName').value);
+        formData.append('password', document.getElementById('password').value);
+        formData.append('file', capturedBlob, 'reference.jpg');
+
+        try {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                successDiv.textContent = 'Account created! Redirecting to login...';
+                successDiv.classList.remove('hidden');
+                errorDiv.classList.add('hidden');
+                setTimeout(() => window.location.href = '/login', 2000);
+            } else {
+                errorDiv.textContent = data.detail || 'Registration failed';
+                errorDiv.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        } catch (error) {
+            errorDiv.textContent = 'Connection error. Please try again.';
+            errorDiv.classList.remove('hidden');
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+{% endblock %}
